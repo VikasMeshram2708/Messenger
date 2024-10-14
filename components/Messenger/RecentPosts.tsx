@@ -1,13 +1,16 @@
-import { Ellipsis, Forward } from "lucide-react";
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+"use client";
+
+import { EllipsisVerticalIcon, ArrowRightIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button, buttonVariants } from "../ui/button";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-} from "../ui/card";
+  useDeleteMyPostMutation,
+  useGetAllPostsQuery,
+  useUpdateMyPostMutation,
+} from "@/app/store/chat/chatSlice";
+import { Skeleton } from "../ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,174 +18,181 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
+import toast from "react-hot-toast";
+// import { updatePostSchema } from "@/app/models/MessageSchema";
+import { FormEvent, useState } from "react";
+import { Input } from "../ui/input";
 
-const sample = [
-  {
-    id: "1",
-    user: {
-      userId: "user_123",
-      username: "john_doe",
-      avatarUrl: "https://example.com/avatar1.jpg",
-    },
-    content: "Hey! How's it going?",
-    timestamp: "2024-10-11T14:23:45Z",
-    attachments: [],
-  },
-  {
-    id: "2",
-    user: {
-      userId: "user_456",
-      username: "jane_smith",
-      avatarUrl: "https://example.com/avatar2.jpg",
-    },
-    content: "Hi! All good, just working on a new project.",
-    timestamp: "2024-10-11T14:24:10Z",
-    attachments: [],
-  },
-  {
-    id: "3",
-    user: {
-      userId: "user_789",
-      username: "alice_w",
-      avatarUrl: "https://example.com/avatar3.jpg",
-    },
-    content: "Check out this cool photo I took!",
-    timestamp: "2024-10-11T14:25:00Z",
-    attachments: [
-      {
-        type: "image",
-        url: "https://example.com/photo.jpg",
-      },
-    ],
-  },
-  {
-    id: "4",
-    user: {
-      userId: "user_123",
-      username: "john_doe",
-      avatarUrl: "https://example.com/avatar1.jpg",
-    },
-    content: "Looks awesome! Where was that?",
-    timestamp: "2024-10-11T14:25:30Z",
-    attachments: [],
-  },
-  {
-    id: "5",
-    user: {
-      userId: "user_456",
-      username: "jane_smith",
-      avatarUrl: "https://example.com/avatar2.jpg",
-    },
-    content: "Hey team, meeting at 3 PM today?",
-    timestamp: "2024-10-11T14:26:15Z",
-    attachments: [],
-  },
-  {
-    id: "6",
-    user: {
-      userId: "user_789",
-      username: "alice_w",
-      avatarUrl: "https://example.com/avatar3.jpg",
-    },
-    content: "Yes, 3 PM works for me.",
-    timestamp: "2024-10-11T14:27:00Z",
-    attachments: [],
-  },
-  {
-    id: "7",
-    user: {
-      userId: "user_123",
-      username: "john_doe",
-      avatarUrl: "https://example.com/avatar1.jpg",
-    },
-    content: "Great! Do we have an agenda?",
-    timestamp: "2024-10-11T14:28:15Z",
-    attachments: [],
-  },
-  {
-    id: "8",
-    user: {
-      userId: "user_456",
-      username: "jane_smith",
-      avatarUrl: "https://example.com/avatar2.jpg",
-    },
-    content: "I'll share a doc before the meeting.",
-    timestamp: "2024-10-11T14:29:00Z",
-    attachments: [
-      {
-        type: "document",
-        url: "https://example.com/agenda.pdf",
-        fileName: "Meeting_Agenda.pdf",
-      },
-    ],
-  },
-  {
-    id: "9",
-    user: {
-      userId: "user_789",
-      username: "alice_w",
-      avatarUrl: "https://example.com/avatar3.jpg",
-    },
-    content: "Thanks, looking forward to it.",
-    timestamp: "2024-10-11T14:30:30Z",
-    attachments: [],
-  },
-  {
-    id: "10",
-    user: {
-      userId: "user_123",
-      username: "john_doe",
-      avatarUrl: "https://example.com/avatar1.jpg",
-    },
-    content: "See you all there!",
-    timestamp: "2024-10-11T14:31:45Z",
-    attachments: [],
-  },
-];
+const RecentPosts = () => {
+  const { data, isLoading, error } = useGetAllPostsQuery();
+  const [deletePost, { error: deleteError }] = useDeleteMyPostMutation({});
+  const [updatePost, { error: updateError }] = useUpdateMyPostMutation({});
+  const [isEditable, setIsEditable] = useState(false);
+  const [editablePostId, setEditablePostId] = useState<number | null>(null);
+  const [nContent, setNContent] = useState("");
 
-export default function RecentPosts() {
-  return (
-    <div className="min-h-screen grid gap-2">
-      {sample?.map((post) => (
-        <Card key={post?.id}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Avatar>
-                  <AvatarImage src="https://github.com/shadcn.png" />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <div className="flex gap-1">
-                  <span>@MRX</span>
+  if (isLoading) {
+    return (
+      <>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Card key={i} className="shadow-md rounded-lg overflow-hidden">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <Skeleton className="h-4 w-24" />
                 </div>
+                <Skeleton className="h-6 w-6 rounded-full" />
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <span className={buttonVariants({ variant: "ghost" })}>
-                    <Ellipsis />
-                  </span>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuLabel>Choose Action</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Edit</DropdownMenuItem>
-                  <DropdownMenuItem>Delete</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            </CardHeader>
+            <div className="p-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full mt-2" />
             </div>
-          </CardHeader>
-          <CardContent className="px-6 py-2">
-            <CardDescription>{post?.content}</CardDescription>
-          </CardContent>
-          <CardFooter className="flex items-center justify-between gap-2">
-            <span>{new Date().toLocaleDateString()}</span>
-            <Button variant={"ghost"}>
-              <Forward />
-            </Button>
-          </CardFooter>
-        </Card>
-      ))}
+            <div className="flex items-center justify-between p-4 border-t">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-6 w-6 rounded-full" />
+            </div>
+          </Card>
+        ))}
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-500 text-center py-4">Error loading posts</div>
+    );
+  }
+
+  const handleDelete = async (id: number) => {
+    try {
+      const res = await deletePost({ postId: id });
+      if (deleteError) {
+        return toast.error(res?.error as string);
+      } else if (!res) {
+        // @ts-ignore
+        return toast.error(res?.error as string);
+      }
+      return toast.success(res?.data as string);
+    } catch (error) {
+      console.log(`Something went wrong. Failed to delete post :${error}`);
+    }
+  };
+
+  const toggleEdit = (id: number) => {
+    setEditablePostId(id);
+    setIsEditable((prev) => !prev);
+  };
+
+  // useEffect(() => {}, [isEditable]);
+  // console.log("e", isEditable);
+
+  const handleUpdate = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // console.log("ud", {
+    //   postId: editablePostId as number,
+    //   content: nContent,
+    // });
+    try {
+      const res = await updatePost({
+        postId: editablePostId as number,
+        content: nContent,
+        // postImg: "",
+        // postVideo: "",
+      });
+      // console.log("res", res);
+      if (updateError) {
+        return toast.error(res?.error as string);
+      } else if (!res) {
+        // @ts-ignore
+        return toast.error(res?.error as string);
+      }
+      // reset();
+      setNContent("");
+      toast.success(res?.data as string);
+      setIsEditable(false)
+    } catch (error) {
+      console.log(`Something went wrong. Failed to delete post :${error}`);
+    }
+  };
+
+  return (
+    <div className="min-h-screen max-w-5xl mx-auto">
+      <div className="grid gap-6 grid-cols-1">
+        {data?.map((elem) => (
+          <Card key={elem?.id} className="shadow-md rounded-lg overflow-hidden">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Avatar>
+                    <AvatarImage src="https://github.com/shadcn.png" />
+                    <AvatarFallback>CN</AvatarFallback>
+                  </Avatar>
+                  <CardTitle className="text-sm font-semibold">@MRX</CardTitle>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    <EllipsisVerticalIcon className="h-5 w-5" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuLabel>Choose Action</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <Button
+                        className="w-full"
+                        onClick={() => toggleEdit(elem?.id)}
+                        type="button"
+                      >
+                        Edit
+                      </Button>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Button
+                        className="w-full"
+                        variant={"destructive"}
+                        onClick={() => handleDelete(elem?.id)}
+                        type="button"
+                      >
+                        Delete
+                      </Button>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="">
+                {!isEditable && <p className="">{elem?.content}</p>}
+                {isEditable && editablePostId === elem?.id && (
+                  <form onSubmit={handleUpdate}>
+                    <Input
+                      defaultValue={elem?.content}
+                      value={nContent}
+                      onChange={(e) => setNContent(e.target.value)}
+                      placeholder={elem?.content}
+                    />
+                    <span>
+                      <Button variant={"destructive"} type="submit">
+                        Confirm Edit
+                      </Button>
+                    </span>
+                  </form>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className=" text-sm">Just now</span>
+                <Button variant={"ghost"} aria-label="Forward post">
+                  <ArrowRightIcon className="h-5 w-5" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
-}
+};
+
+export default RecentPosts;

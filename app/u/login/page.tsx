@@ -34,6 +34,7 @@ export default function Login() {
 
   const onSubmit: SubmitHandler<loginSchema> = async (data) => {
     try {
+      if (!data) return;
       const res = await signIn("credentials", {
         email: data?.email,
         password: data?.password,

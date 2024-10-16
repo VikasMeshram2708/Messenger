@@ -34,12 +34,13 @@ export default function SignUp() {
   const [newUser, { error, isLoading }] = useNewUserMutation({});
   const onSubmit: SubmitHandler<signUpSchema> = async (data) => {
     try {
+      if (!data) return;
       // console.log("d", data);
       const res = await newUser(data);
       // console.log('res', res)
       if (error) {
         return toast.error(res?.error as string);
-      } else if(!res) {
+      } else if (!res) {
         // @ts-ignore
         return toast.error(res?.error as string);
       }

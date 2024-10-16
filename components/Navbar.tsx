@@ -1,14 +1,24 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client";
 
 import Link from "next/link";
-import { Button } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
 import { ModeToggle } from "./ModeToggle";
 import { signOut, useSession } from "next-auth/react";
 import { useEffect } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, User } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 export default function Navbar() {
-  const { status } = useSession();
+  const { status, data } = useSession();
 
   useEffect(() => {}, [status]);
   return (
@@ -21,16 +31,42 @@ export default function Navbar() {
           {status === "loading" ? (
             <span>Loading...</span>
           ) : status === "authenticated" ? (
-            <Button
-              onClick={() => signOut()}
-              className="space-x-2"
-              variant={"destructive"}
-            >
-              <span>
-                <LogOut />
-              </span>
-              <span>Logout</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className={cn(
+                  `flex items-center gap-1`,
+                  buttonVariants({ variant: "default" })
+                )}
+              >
+                <span>
+                  <User className="w-5 h-5" />
+                </span>
+                {/* @ts-ignore */}
+                <span>{data?.user?.username}</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <span>
+                    <User className="w-5 h-5" />
+                  </span>
+                  <Link href="/u/profile">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Button
+                    onClick={() => signOut()}
+                    variant={"destructive"}
+                    className="w-full flex gap-1"
+                  >
+                    <span>
+                      <LogOut className="w-5 h-5" />
+                    </span>
+                    Logout
+                  </Button>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Button className="font-bold">
               <Link href="/u/signup">Login / Sign Up</Link>

@@ -27,8 +27,9 @@ export default function AddPost() {
   ) => {
     console.log("Form submitted. Raw data:", data);
     try {
+      if (!data) return;
       const res = await sendPost(data);
-      console.log("res", res);
+      // console.log("res", res);
       if (error) {
         return toast.error(res?.error as string);
       } else if (!res) {
@@ -44,7 +45,7 @@ export default function AddPost() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <p className="py-5 text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold">
+      <p className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold">
         Post Something
       </p>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">

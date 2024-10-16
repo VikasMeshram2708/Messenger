@@ -10,6 +10,7 @@ export const userSlice = createApi({
   tagTypes: ["User"],
   baseQuery: fetchBaseQuery({ baseUrl: "/api/u" }),
   endpoints: (builder) => ({
+    // Register New User
     newUser: builder.mutation({
       query: (data: signUpSchema) => ({
         url: "/signup",
@@ -27,7 +28,15 @@ export const userSlice = createApi({
         return (data as { message: string })?.message || "An Error Ocurred";
       },
     }),
+    // Fetch User Details
+    getUserDetails: builder.query({
+      query: () => "/profile",
+      providesTags: ["User"],
+      transformResponse: (response: { user: FetchedUser }) => {
+        return response.user;
+      },
+    }),
   }),
 });
 
-export const { useNewUserMutation } = userSlice;
+export const { useNewUserMutation, useGetUserDetailsQuery } = userSlice;

@@ -112,9 +112,17 @@ const RecentPosts = () => {
       // reset();
       setNContent("");
       toast.success(res?.data as string);
-      setIsEditable(false)
+      setIsEditable(false);
     } catch (error) {
       console.log(`Something went wrong. Failed to delete post :${error}`);
+    }
+  };
+
+  const handleComingSoon = () => {
+    try {
+      toast.error("Coming Soon");
+    } catch (error) {
+      console.error(`Something went wrong. Please try again ${error}`);
     }
   };
 
@@ -130,7 +138,7 @@ const RecentPosts = () => {
                     <AvatarImage src="https://github.com/shadcn.png" />
                     <AvatarFallback>CN</AvatarFallback>
                   </Avatar>
-                  <CardTitle className="text-sm font-semibold">@MRX</CardTitle>
+                  <CardTitle className="text-sm font-semibold">@{elem?.User?.username}</CardTitle>
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger>
@@ -173,17 +181,25 @@ const RecentPosts = () => {
                       onChange={(e) => setNContent(e.target.value)}
                       placeholder={elem?.content}
                     />
-                    <span>
-                      <Button variant={"destructive"} type="submit">
-                        Confirm Edit
-                      </Button>
-                    </span>
+                    <Button
+                      className="my-3"
+                      variant={"destructive"}
+                      type="submit"
+                    >
+                      Confirm Edit
+                    </Button>
                   </form>
                 )}
               </div>
               <div className="flex items-center justify-between">
-                <span className=" text-sm">Just now</span>
-                <Button variant={"ghost"} aria-label="Forward post">
+                <span className=" text-sm">
+                  {new Date(elem?.createdAt).toLocaleDateString()}
+                </span>
+                <Button
+                  onClick={handleComingSoon}
+                  variant={"ghost"}
+                  aria-label="Forward post"
+                >
                   <ArrowRightIcon className="h-5 w-5" />
                 </Button>
               </div>
